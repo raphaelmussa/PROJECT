@@ -1,0 +1,236 @@
+<?php
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['form_name']) && $_POST['form_name'] == 'loginform')
+{
+   $success_page = './YOUR-HOME.html';
+   $error_page = basename(__FILE__);
+   $mysql_server = '';
+   $mysql_username = '';
+   $mysql_password = '';
+   $mysql_database = '';
+   $mysql_table = '';
+   $crypt_pass = md5($_POST['password']);
+   $found = false;
+   $fullname = '';
+   $role = '';
+   $avatar = '';
+   $session_timeout = 600;
+   $db = mysqli_connect($mysql_server, $mysql_username, $mysql_password);
+   if (!$db)
+   {
+      die('Failed to connect to database server!<br>'.mysqli_error($db));
+   }
+   mysqli_select_db($db, $mysql_database) or die('Failed to select database<br>'.mysqli_error($db));
+   mysqli_set_charset($db, 'utf8');
+   $sql = "SELECT * FROM ".$mysql_table." WHERE username = '".mysqli_real_escape_string($db, $_POST['username'])."'";
+   $result = mysqli_query($db, $sql);
+   if ($data = mysqli_fetch_array($result))
+   {
+      if ($crypt_pass == $data['password'] && $data['active'] != 0)
+      {
+         $found = true;
+         $fullname = $data['fullname'];
+         $role = $data['role'];
+         $folder = substr($_SERVER['REQUEST_URI'], 0, strrpos($_SERVER['REQUEST_URI'], '/') + 1);
+         $avatar = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$folder" . "avatars/" . $data['avatar'];
+      }
+   }
+   mysqli_close($db);
+   if($found == false)
+   {
+      header('Location: '.$error_page);
+      exit;
+   }
+   else
+   {
+      if (session_id() == "")
+      {
+         session_start();
+      }
+      $_SESSION['username'] = $_POST['username'];
+      $_SESSION['fullname'] = $fullname;
+      $_SESSION['role'] = $role;
+      $_SESSION['avatar'] = $avatar;
+      $_SESSION['expires_by'] = time() + $session_timeout;
+      $_SESSION['expires_timeout'] = $session_timeout;
+      $rememberme = isset($_POST['rememberme']) ? true : false;
+      if ($rememberme)
+      {
+         setcookie('username', $_POST['username'], time() + 3600*24*30);
+         setcookie('password', $_POST['password'], time() + 3600*24*30);
+      }
+      header('Location: '.$success_page);
+      exit;
+   }
+}
+$username = isset($_COOKIE['username']) ? $_COOKIE['username'] : '';
+$password = isset($_COOKIE['password']) ? $_COOKIE['password'] : '';
+?>
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>LOGIN PAGE</title>
+<meta name="generator" content="Quick 'n Easy Web Builder Trial Version - http://www.quickandeasywebbuilder.com">
+<style>
+body
+{
+   background-color: #FFFFFF;
+   background-image: url(images/three-boys-smiling-zanzibar-tanzania-17792-800x533.jpg);
+   background-attachment: fixed;
+   background-position: left top;
+   background-repeat: repeat;
+   background-size: 100% 100%;
+   color: #000000;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 13px;
+   line-height: 1.1875;
+   margin: 0;
+   padding: 0;
+}
+a
+{
+   color: #0000FF;
+   text-decoration: underline;
+}
+a:visited
+{
+   color: #800080;
+}
+a:active
+{
+   color: #FF0000;
+}
+a:hover
+{
+   color: #0000FF;
+   text-decoration: underline;
+}
+#wb_Text1
+{
+   background-color: #2F4F4F;
+   background-color: rgba(47, 79, 79, 0.67);
+   background-image: none;
+   border: 0px solid #000000;
+   padding: 0;
+   margin: 0;
+   text-align: center;
+}
+#wb_Text1 div
+{
+   text-align: center;
+}
+#Login1
+{
+   background-color: #FFFFFF;
+   border-color:#00008B;
+   border-width:1px;
+   border-style: solid;
+   border-radius: 3px;
+   color: #000000;
+   border-spacing: 6px;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 13px;
+   text-align: left;
+   width: 682px;
+   height: 382px;
+}
+#Login1 td
+{
+   padding: 0;
+}
+#Login1 .header
+{
+   background-color: #191970;
+   color: #FFFFFF;
+   height: 16px;
+   padding: 4px 4px 4px 4px;
+   text-align: center;
+}
+#Login1 .label
+{
+   height: 16px;
+}
+#Login1 .row
+{
+   height: 30px;
+   text-align: left;
+}
+#Login1 .input
+{
+   background-color: #FFFFFF;
+   border-color: #CCCCCC;
+   border-width: 1px;
+   border-style: solid;
+   border-radius: 2px;
+   color: #000000;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 13px;
+   width: 100%;
+   height: 30px;
+   box-sizing: border-box;
+   padding: 6px 4px 6px 4px;
+}
+#Login1 .input:focus
+{
+   border-color: #66AFE9;
+   outline: 0;
+   -webkit-box-shadow: inset 0px 1px 1px rgba(0,0,0,0.075), 0px 0px 8px rgba(102, 175, 233, 0.60);
+   -moz-box-shadow: inset 0px 1px 1px rgba(0,0,0,0.075), 0px 0px 8px rgba(102, 175, 233, 0.60);
+   box-shadow: inset 0px 1px 1px rgba(0,0,0,0.075), 0px 0px 8px rgba(102, 175, 233, 0.60);
+}
+#Login1 .button
+{
+   background-color: #3370B7;
+   border-color: #2E6DA4;
+   border-width: 1px;
+   border-style: solid;
+   border-radius: 3px;
+   color: #FFFFFF;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 13px;
+   padding: 4px 14px 4px 14px;
+   -webkit-appearance: none;
+}
+</style>
+</head>
+<body>
+<a href="http://www.quickandeasywebbuilder.com" target="_blank"><img src="images/builtwithqwb6.png" alt="Quick 'n Easy Web Builder" style="position:absolute;left:364px;top:437px;border-width:0;z-index:9999"></a>
+<div id="wb_Text1" style="position:absolute;left:0px;top:0px;width:1379px;height:121px;z-index:1;">
+<div style="font-family:Arial;font-size:13px;line-height:16px;color:#000000;">
+<div><span style="font-family:'Cooper Black';font-size:64px;line-height:74px;color:#191970;"><strong>DODOMA ORPHANAGE CENTRES</strong></span></div>
+</div>
+</div>
+<div id="wb_Login1" style="position:absolute;left:328px;top:123px;width:682px;height:382px;z-index:2;">
+<form name="loginform" method="post" accept-charset="UTF-8" action="<?php echo basename(__FILE__); ?>" id="loginform">
+<input type="hidden" name="form_name" value="loginform">
+<table id="Login1">
+<tr>
+   <td class="header">Log In</td>
+</tr>
+<tr>
+   <td class="label"><label for="username">User Name</label></td>
+</tr>
+<tr>
+   <td class="row"><input class="input" name="username" type="text" id="username" value="<?php echo $username; ?>"></td>
+</tr>
+<tr>
+   <td class="label"><label for="password">Password</label></td>
+</tr>
+<tr>
+   <td class="row"><input class="input" name="password" type="password" id="password" value="<?php echo $password; ?>"></td>
+</tr>
+<tr>
+   <td class="row"><input id="rememberme" type="checkbox" name="rememberme"><label for="rememberme">Remember me</label></td>
+</tr>
+<tr>
+   <td style="text-align:center;vertical-align:bottom"><input class="button" type="submit" name="login" value="Log In" id="login"></td>
+</tr>
+</table>
+</form>
+</div>
+</body>
+</html>
